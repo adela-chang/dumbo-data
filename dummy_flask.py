@@ -11,7 +11,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from flask_cors import CORS
 from flask_cors import cross_origin
 from string import digits
-
+from flask import jsonify
 
 import librosa
 app = Flask(__name__)
@@ -111,9 +111,16 @@ def sexism_sentiment(input_text):
     got_a_feeling = darth.polarity_scores(input_text)
     male_unigrams = ['he','his','him']
     female_unigrams = ['she','hers','her']
-    male_in = any(extract_unigram_feats(input_text,male_unigrams))
-    female_in = any(extract_unigram_feats(input_text,female_unigrams))
-    return got_a_feeling, male_in, female_in
+    male_feats = extract_unigram_feats(input_text,male_unigrams)
+    print(male_feats)
+    male_in = any('True' in x for x in male_feats)
+    print(male_in)
+    female_feats = extract_unigram_feats(input_text,female_unigrams)
+    print(female_feats)
+    female_in = any('True' in x for x in female_feats)
+    print(female_in)
+    #female_in = any(extract_unigram_feats(input_text,female_unigrams))
+    return got_a_feeling, female_in, male_in
 
 #@cross_origin()
 @app.route('/send', methods=['GET', 'POST'])
@@ -131,8 +138,9 @@ def parse_request():
     text_output = recognition('working.flac')
     result = text_output.translate(None, digits)
     print(result)
-    scores, male, female = sexism_sentiment(result)
-    return scores, male, female
+    scores, female, male = sexism_sentiment(result)
+    output = jsonify(sentiment_compound=scores['compound'],sentiment_pos=scores['pos'],sentiment_neg=scores['neg'],sentiment_neu=scores['neu'],female_in=female,male_in=male)
+    return output
 
 if __name__ == '__main__':
     app.run(host= '0.0.0.0', port=9000, debug=False)
