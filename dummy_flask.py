@@ -139,6 +139,7 @@ def parse_request():
     result = text_output.translate(None, digits)
     print(result)
     scores, female, male = sexism_sentiment(result)
+    print(scores)
     output = jsonify(sentiment_compound=scores['compound'],sentiment_pos=scores['pos'],sentiment_neg=scores['neg'],sentiment_neu=scores['neu'],female_in=female,male_in=male)
     return output
 
